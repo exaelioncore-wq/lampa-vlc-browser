@@ -1,6 +1,6 @@
 /*
  * Plugin Name: VLC External Player
- * Plugin Version: 1.1
+ * Plugin Version: 1.2
  * Plugin Author: Claude
  * Plugin Description: Открывает видео в VLC плеере
  */
@@ -9,14 +9,6 @@
 
     var checkInterval;
 
-    function getVideoUrl() {
-        var video = document.querySelector('video');
-        if (video && video.src && video.src.indexOf('blob:') === -1) {
-            return video.src;
-        }
-        return null;
-    }
-
     function removeBtn() {
         var old = document.getElementById('vlc-ext-btn');
         if (old) old.remove();
@@ -24,8 +16,10 @@
 
     function addBtn(url) {
         removeBtn();
-        var btn = document.createElement('div');
+
+        var btn = document.createElement('a');
         btn.id = 'vlc-ext-btn';
+        btn.href = 'vlc://' + url;
         btn.innerText = 'VLC';
         btn.title = 'Открыть в VLC';
         btn.style.cssText = [
@@ -41,14 +35,10 @@
             'font-weight:bold',
             'z-index:2147483647',
             'border:1px solid rgba(255,255,255,0.25)',
-            'letter-spacing:1px'
+            'letter-spacing:1px',
+            'text-decoration:none',
+            'display:block'
         ].join(';');
-
-        btn.addEventListener('click', function (e) {
-            e.stopPropagation();
-            e.preventDefault();
-            window.location.href = 'vlc://' + url;
-        });
 
         document.body.appendChild(btn);
     }
@@ -56,12 +46,13 @@
     function startWatch() {
         if (checkInterval) clearInterval(checkInterval);
         checkInterval = setInterval(function () {
-            var url = getVideoUrl();
-            var existing = document.getElementById('vlc-ext-btn');
             var video = document.querySelector('video');
+            var existing = document.getElementById('vlc-ext-btn');
 
-            if (url && video) {
-                if (!existing) addBtn(url);
+            if (video && video.src && video.src.indexOf('blob:') === -1 && video.src.indexOf('http') === 0) {
+                if (!existing || existing.href !== 'vlc://' + video.src) {
+                    addBtn(video.src);
+                }
             } else {
                 removeBtn();
             }
